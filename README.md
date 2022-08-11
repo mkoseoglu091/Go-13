@@ -1,2 +1,4 @@
 # Go-13
- Simple 2 Player Go Game on 13x13 board. For Pico8
+
+Pico-8 2 player GO game. Board Size: 13x13 <br/>
+Install pico-8, type folder, copy game file into folder, load *filename*, CTRL+R
