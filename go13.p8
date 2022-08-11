@@ -46,7 +46,7 @@ function _init()
  
  -- init and store all neighbors
  all_n = get_all_neighbors()
- 
+
  
 end
 
@@ -77,7 +77,7 @@ function _draw()
  -- draw score
  print("black: " .. white.points, 10, 0)
  print("white: " .. black.points, 90, 0)
- 
+
 end
 
 function _update()
@@ -159,6 +159,14 @@ function u_add(tab, val)
  add(tab, val)
  return true
 end
+
+-- check if element in table
+function contains(tab, val)
+ for i in all(tab) do
+  if i == val then return true end
+ end
+ return false
+end
 -->8
 -- stone removal functions
 
@@ -169,7 +177,7 @@ function get_neighbors(p)
  defs = {}
  for i in all(possibles) do
   if on_board(i[1], i[2]) then
-   add(defs, i)
+   add(defs, flatten(i[1], i[2]))
   end
  end
  return defs
@@ -187,7 +195,27 @@ end
 -- find reach
 -- set -> u_add
 -- pop -> deli(x,#x)
-
+function find_reach(fc)
+ col = b.board[fc]
+ chain = {}
+ u_add(chain, fc)
+ reach = {}
+ frontier = {}
+ u_add(frontier, fc)
+ 
+ while #frontier > 0 do
+  current_fc = deli(frontier, #frontier)
+  u_add(chain, current_fc)
+  for fn in all(all_n[current_fc]) do
+   if b.board[fn] == col and not contains(chain, fn) then
+    u_add(frontier, fn)
+   elseif b.board[fn] != col then
+    u_add(reach, fn)
+   end
+  end
+ end
+ return chain, reach
+end
 __gfx__
 0000000099999994499999949999994499999994999999940011100000ddd0007770077700000000000000000000000000000000000000000000000000000000
 000000009999999499999994999999949999999499999994012221000d777d007880088707777770000000000000000000000000000000000000000000000000
