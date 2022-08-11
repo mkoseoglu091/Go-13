@@ -20,19 +20,19 @@ function _init()
  pointer.current = 2 // 1=white 2=black
  
  -- board
- board = {{"", "", "", "", "", "", "", "", "", "", "", "", ""},
-									 {"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""},
- 									{"", "", "", "", "", "", "", "", "", "", "", "", ""}}
+ b = {}
+ b.size = 13
+ b.empty = "."
+ b.black = "b"
+ b.white = "w"
+ b.board = {}
+ 
+ -- create board as string
+ for x=1,13 do
+  for y=1,13 do
+   add(b.board, b.empty)
+  end
+ end
  
  -- white stones
  white = {}
@@ -47,20 +47,23 @@ function _init()
 end
 
 function _draw()
+ 
  -- draw map
  cls()
  map()
+ 
+ -- draw turn indicator
  if pointer.current == 1 then spr(white.sp, 60, 0)
  else spr(black.sp, 60, 0) end
  
  -- draw board
- for i, rows in pairs(board) do
-  for j, point in pairs(rows) do
-   if point == "b" then
-   	spr(black.sp, (j-1)*8+12, (i-1)*8+12)
-   elseif point == "w" then
-   	spr(white.sp, (j-1)*8+12, (i-1)*8+12)
-   end
+ for i,p in  pairs(b.board) do
+  if p == b.black then
+   x, y = unflatten(i)
+   spr(black.sp, (y-1)*8+12, (x-1)*8+12)
+  elseif p == b.white then
+   x, y = unflatten(i)
+   spr(white.sp, (y-1)*8+12, (x-1)*8+12)
   end
  end
  
@@ -74,10 +77,11 @@ function _draw()
 end
 
 function _update()
- -- pointer
+ -- pointer motion
  pointer.timer += 1
  if (pointer.timer > 10) then pointer.timer = -10 end
  if (pointer.timer < 0) then pointer.sp = 8 else pointer.sp = 9 end
+ 
  -- pointer control
  if btnp(⬅️) and pointer.x > 1 then pointer.x -= 1
  elseif btnp(➡️) and pointer.x < 13 then pointer.x += 1
@@ -85,89 +89,32 @@ function _update()
  elseif btnp(⬇️) and pointer.y < 13 then pointer.y += 1
  elseif btnp(❎) then
   
-  if board[pointer.y][pointer.x] == "" then
+  if b.board[flatten(pointer.y, pointer.x)] == b.empty then
    if pointer.current == 1 then
-    board[pointer.y][pointer.x] = "w"
+    b.board[flatten(pointer.y, pointer.x)] = b.white
     pass_player() 
     sfx(0)
    else
-    board[pointer.y][pointer.x] = "b"
+    b.board[flatten(pointer.y, pointer.x)] = b.black
     pass_player()
     sfx(1)
    end
   end
   
  elseif btnp(🅾️) then
-  if board[pointer.y][pointer.x] == "b" then
-   board[pointer.y][pointer.x] = ""
+  if b.board[flatten(pointer.y, pointer.x)] == b.black then
+   b.board[flatten(pointer.y, pointer.x)] = b.empty
    white.points += 1
    sfx(2)
-  elseif board[pointer.y][pointer.x] == "w" then
-   board[pointer.y][pointer.x] = ""
+  elseif b.board[flatten(pointer.y, pointer.x)] == b.white then
+   b.board[flatten(pointer.y, pointer.x)] = b.empty
    black.points += 1
    sfx(2)
   end
  end
- 
 end
 -->8
--- stone removal
-
--- look at current placed stone
--- look for oposite colored stones around
--- for each stone of oposing color
- -- check liberties of the given stone
- -- if liberty is "" not dead
- -- if liberty is "oponent" possibly dead
- -- if liberty "own_col" continue checking
- 
--- todo
-
--- function that checks if point is within board
--- function that looks at all neighbours of a given stone
-
-function check_capture(x, y, cur)
- if cur == 1 then// white player played last
-  own = "w"
-  op = "b"
- else
-  own = "b"
-  op = "w"
- end
- 
- points = {}
- initial_points = {} -- store already checked points
- add(initial_points, {x,y})
- 
- -- find all opp neighbours of the placed stone
- add_neighbours(x, y, own, op, points, initial_points)
- 
- 
-end
-
-
--- add neighbours in {x,y}:"" format
-function add_neighbours(x, y, own, ap, points, initial_points)
- if x-1 > 0 and (not contains(initial_points, {x-1, y})) then
-  coord = {x-1, y}
-  points[coord] = board[y][x-1]
- end
- 
- if x+1 < 14 and (not contains(initial_points, {x+1, y})) then
-  coord = {x+1, y}
-  points[coord] = board[y][x+1]
- end
- 
- if y-1 > 0 and (not contains(initial_points, {x, y-1})) then
-  coord = {x, y-1}
-  points[coord] = board[y-1][x]
- end
- 
- if y+1 > 14 and (not contains(initial_points, {x, y+1})) then
-  coord = {x, y+1}
-  points[coord] = board[y+1][x]
- end
-end
+-- helpers
 
 -- check if point is in table
 function contains(tab, point)
@@ -179,6 +126,7 @@ function contains(tab, point)
  return false
 end
 
+-- pass to next palyer
 function pass_player()
  if pointer.current == 1 then
   pointer.current = 2
@@ -187,8 +135,34 @@ function pass_player()
  end
 end
 -->8
--- look at all stones of opponent
--- clear ones that are dead
+-- board functions
+
+-- check if point is on board
+function on_board(x, y)
+ if (x>0) and (x<14) and (y>0) and (y<14) then
+  return true
+ else
+  return false
+ end
+end
+
+-- flatten coordinate
+function flatten(x,y)
+ return b.size * (x-1) + y
+end
+
+-- unflatten coordinate
+function unflatten(fc)
+ x = flr(fc / 13) + 1
+ y = fc % 13
+ if y == 0 then y = 13 x=x-1 end
+ return x,y
+end
+
+-- replace character in str
+function replace_char(str, char, pos)
+ return sub(str, 1, pos-1)..char..sub(str, pos+1)
+end
 __gfx__
 0000000099999994499999949999994499999994999999940011100000ddd0007770077700000000000000000000000000000000000000000000000000000000
 000000009999999499999994999999949999999499999994012221000d777d007880088707777770000000000000000000000000000000000000000000000000
