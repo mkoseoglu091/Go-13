@@ -75,8 +75,8 @@ function _draw()
  spr(pointer.sp, (pointer.x-1) * 8 + 12, (pointer.y-1) * 8 + 12)
  
  -- draw score
- print("black: " .. white.points, 10, 0)
- print("white: " .. black.points, 90, 0)
+ print("black: " .. white.points, 10, 1, 7)
+ print("white: " .. black.points, 90, 1, 7)
 
 end
 
