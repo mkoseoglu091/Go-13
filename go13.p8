@@ -19,6 +19,9 @@ function _init()
  b.black = "b"
  b.white = "w"
  b.board = {}
+ b.board2 = {"."}
+ b.board3 = {".."}
+ b.board_temp = {"..."}
  
  -- pointer
  pointer = {}
@@ -39,14 +42,20 @@ function _init()
  white = {}
  white.sp = 7
  white.points = 0
+ white.pass = false
  
  -- black stones
  black = {}
  black.sp = 6
  black.points = 0
+ black.pass = false
  
  -- init and store all neighbors
  all_n = get_all_neighbors()
+
+ -- info message timer
+ info_timer = 0
+ show_info = false
 
  -- debug
  debug = ""
@@ -81,10 +90,20 @@ function _draw()
  print("black: " .. white.points, 10, 1, 7)
  print("white: " .. black.points, 90, 1, 7)
 
+ -- show info
+ if show_info then
+  spr(64, 28, 36, 9, 2)
+  print("❎ to place stone", 30, 38, 0)
+  print(" - or p to pass")
+ end
  
 end
 
 function _update()
+ -- info box
+ if show_info then info_timer += 1 end
+ if info_timer > 45 then show_info = false info_timer = 0 end
+
  -- pointer motion
  pointer.timer += 1
  if (pointer.timer > 10) then pointer.timer = -10 end
@@ -98,15 +117,26 @@ function _update()
  elseif btnp(❎) then
   
   if b.board[flatten(pointer.y, pointer.x)] == b.empty then
+   -- save board state to check for ko
+   copy_tab(b.board, b.board_temp)
    if pointer.current == b.white then
     b.board[flatten(pointer.y, pointer.x)] = b.white
     sc = 0
     sc = remove_dead(b.black)
     illegal = remove_dead(b.white)
-    if illegal == 0 then 
-     white.points += sc
-     pass_player() 
-     sfx(0)
+    if illegal == 0 then
+     -- check ko
+     if not same_tab(b.board, b.board3) then
+  		  white.points += sc
+      pass_player() 
+      sfx(0)
+      copy_tab(b.board2, b.board3)
+      copy_tab(b.board, b.board2)
+  		  white.pass = false
+  		 else
+      -- ko
+      copy_tab(b.board_temp, b.board)
+     end
     end
    else
     b.board[flatten(pointer.y, pointer.x)] = b.black
@@ -114,23 +144,24 @@ function _update()
     sc = remove_dead(b.white)
     illegal = remove_dead(b.black)
     if illegal == 0 then
-     black.points += sc
-     pass_player()
-     sfx(1)
+     -- check ko
+     if not same_tab(b.board, b.board3) then
+  		  black.points += sc
+      pass_player() 
+      sfx(0)
+      copy_tab(b.board2, b.board3)
+      copy_tab(b.board, b.board2)
+  		  black.pass = false
+  		 else
+      -- ko
+      copy_tab(b.board_temp, b.board)
+     end
     end
    end
   end
   
  elseif btnp(🅾️) then
-  if b.board[flatten(pointer.y, pointer.x)] == b.black then
-   b.board[flatten(pointer.y, pointer.x)] = b.empty
-   white.points += 1
-   sfx(2)
-  elseif b.board[flatten(pointer.y, pointer.x)] == b.white then
-   b.board[flatten(pointer.y, pointer.x)] = b.empty
-   black.points += 1
-   sfx(2)
-  end
+  show_info = true
  end
 end
 -->8
@@ -139,8 +170,10 @@ end
 -- pass to next palyer
 function pass_player()
  if pointer.current == b.white then
+  white.pass = true
   pointer.current = b.black
  else
+  black.pass = true
   pointer.current = b.white
  end
 end
@@ -188,6 +221,24 @@ end
 function reverse_col(col)
  if col==b.black then return b.white
  else return b.black end
+end
+
+-- compare boards
+function same_tab(t1, t2)
+ if count(t1) != count(t2) then return false end
+ for i=1, count(t1) do
+  if t1[i] != t2[i] then
+   return false
+  end
+ end
+ return true
+end
+
+-- copy table
+function copy_tab(t1, t2)
+ for i=1, count(t1) do
+  t2[i] = t1[i]
+ end
 end
 -->8
 -- stone removal functions
@@ -271,6 +322,9 @@ function remove_dead(col)
 end
 
 
+-->8
+-- scoring
+-- if both players pass score!
 __gfx__
 0000000099999994499999949999994499999994999999940011100000ddd0007770077700000000000000000000000000000000000000000000000000000000
 000000009999999499999994999999949999999499999994012221000d777d007880088707777770000000000000000000000000000000000000000000000000
@@ -296,6 +350,38 @@ __gfx__
 33333333099999990999999999999990999999904440533333333333000000000000000000000000000000000000000000000000000000000000000000000000
 33333333099999990999999999999990999999904440533333333333000000000000000000000000000000000000000000000000000000000000000000000000
 33333333000000000999999499999990000000004440533333333333000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+55555555555555555555555555555555555555555555555555555555555555555555555500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+55555555555555555555555555555555555555555555555555555555555555555555555500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
+55555555555555555555555555555555555555555555555555555555555555555555555500000000000000000000000000000000000000000000000000000000
 __map__
 1010101010101010101010101010101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1022141414141414141414141414231500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
