@@ -3,16 +3,35 @@ version 34
 __lua__
 -- main
 
-function _init()
- -- col change
- poke(0x5f10+1, 128+1)
-	poke(0x5f10+2, 128+2)
+
+
+-- title screen
+function init_title()
+ initglobal()
+ mode = 0 -- title screen
+end
+
+-- draw title
+function draw_title()
+ draw_title_screen()
+ print("hold 🅾️ to start", 16, 54, 0)
+end
+
+-- update title
+function update_title()
+ if btn(🅾️) then
+  init_game()
+ end
+end
+
+-- game
+function init_game()
+ mode = 2
 
  -- menuitem
  menuitem(1, "pass", function() pass_player() end)
 
- -- music
- music()
+ 
  
  -- board
  b = {}
@@ -71,7 +90,7 @@ function _init()
  
 end
 
-function _draw()
+function draw_game()
  
  -- draw map
  cls()
@@ -132,7 +151,7 @@ function _draw()
  
 end
 
-function _update()
+function update_game()
  -- if scoreing starts
  if black.pass and white.pass then
   scoring = true
@@ -222,6 +241,34 @@ function _update()
    show_info = true
   end
  end 
+end
+
+
+-- pico 8 functions
+function _init()
+ -- col change
+ poke(0x5f10+1, 128+1)
+	poke(0x5f10+2, 128+2)
+	
+	-- music
+ music()
+ init_title()
+end
+
+function _draw()
+ if mode == 0 then
+  draw_title()
+ else
+  draw_game()
+ end
+end
+
+function _update()
+ if mode == 0 then
+  update_title()
+ else
+  update_game()
+ end
 end
 -->8
 -- common functions
@@ -425,6 +472,141 @@ function match_col(tab, col)
  end
  return true
 end
+-->8
+-- image compress
+
+-- image compressor for title screen
+
+-- main program ---------------
+function draw_title_screen()
+ cls()
+ --info()
+ t="/aml?g-gqdqd-gqdqdqd-/aw.?5dq,?g-????g/bd.qd-/ay.?5/bg.dqd????5/bd.dq,/aj.?qdq,5/bg.dqd/az.?q/bf.dq,??/bf.qdq,/ai.?gqd-?5/bg.dq,/az.?q/bd.dqd-?/bh.qdq,/ah.?5dqd-?/bg.qd-/az.?g/bd.qdq,?g/bf.qdq,qd-/ai.?qdqd??/bg.qd/az.?q/bd.dq,???g/be.qdq,?gqd/ai.?gqdq,??/bf.qdq,/ay.?gqdqdqdq,????5/bd.dqd????5dq,/ah.?5dqd-??g/bf.qd/az.?qdqdq,/av.?qd-/ah.?gqdqd/ah.?5dqdqdq,/ay.?gqdqd/ak.?gqdq,/ag.?gqd/ah.?5dqdq,/ag.?gqdqdqd/az.?5dqdq,/aj.?5dqd-/ag.?5dq,/ah.?qdqd-/ag.?qdqdqd-/a1.?qdqd/al.?qdqd/ah.?qd-/ah.?gqdqd/af.?5dqdqdq,/az.?5dqdq,/aj.?5dqdq,??5d???gqd/ah.?5dqdq,??5/bd.dqd/a2.?qdqd/af.?5dqdq,qdqd-gqdqd??qdq,/ah.?qdqd????/bd.qdq,/a1.?gqdq,????qdqdqd-gqdq,5dqd-??gqd-/ah.?gqdq,???g/bd.qdq,/az.?5dqd-?/bd.qd-?5dqd-?5dqd??5dqd/ah.?5dqd-???5/be.dqd/az.?qdq,??qdqdqdq,??qdqd??qdq,??5dq,/ah.?qdqd????5/be.dqd/ay.?gqd-????gqdqd???gqdq,??qd-???qd-/ah.?gqdq,/aj.?5dqdq,/ax.?5dqd?????gqdq,??5dqd-???-????gqd/ah.?5dqd-/am.?qdq,/ax.?qdq,????qdqd-???qdqd/ah.?5dq,/ah.?qdqd/an.?qd-/ax.?gqd-????gqdqd???gqdq,/ah.?qd-/ah.?gqdq,/an.?qd-/aw.?5dqd????5dqdq,??5dqd-/ag.?qdqd-/ag.?5dqd-/an.?gqd/ax.?qdq,????qdqd????qdqd???g/bd.qd-/ag.?qdqd/an.?qdq,/aw.?gqd-????gqdq,????/bg.qdq,/ag.?gqdq,5d/aj.?5dqd-/aw.?5dqd????5dqd-????g/bg.qd/ah.?5dqd-?qd/ah.?qdqdqd/ax.?5dq,???gqdq,????5/bf.dqd-/ai.?qdqd?g/bg.qdq,/ax.?5dq,5d-gqd-???/bg.qd-/aj.?gqd-???/bg.qd-/ay.?5dqdq,5dqd???g/bf.qd/al.?5dqd????/bg.qd/az.?5dq,??qdq,???g/bd.qd-/ao.?qdq,????/bf.qdq,/a5.?gqd-????gqdqdq,/aq.?gqd-?????/bf.qd/a6.?5dq,?????gqd-/at.?gq,/ag.?g/bd.qdq,/a6.?qd-/a3.?5d-/ah.?gqdqdqdq,/a8.?qd/a4.?5,/ai.?gqdqdq,/a9.?gq,/ata?-/a&h?-???-/ala?goqtdaetdaqtd/aga?sqdutqdqdqtqeqp+/aea?teqdqdueqeqeqdqe+/aca?ouqeudqeqeqdqeudue+/aca?teqdqtqdqeudqdqdup/aba?o!tdqtudueqtqdqtqdtr/aba?t@deqdqeqdqdqtqtd!i</a.a?o!y@i/bf.qd!y@i</a.a?t/bi.@y@+/a.a?s/bi.y@yr/a.a?o!/bi.y@i</a.a?t/bi.@y@+/aaa?t/bh.@y@i</aaa?s/bi.y@+/aaa?o!/bh.y@yr/aba?o!/bh.y@+/aca?o!/bg.y@i</aw.?1@<?1@</a@.?o!/bf.y@yr/ax.?@y@<@y@</a@.?o!/bf.y@+/ay.?@y[?@y[/a#.?o!/be.y@iuuu/ax.?u<??u<`y]/a!.?oqt@y@y@y@dquu/az.?`y]??1@y]/a#.?dqdqdqduuu[/aw.?@y?1@y]??1@u/a$.?/ah.u[/aw.?`y@y?1@u???w[/aia?`yv<?w[/aoa?5u??o/bz.qd</a5.?s/bz.y@+/a5.?o!/bz.y@+/a4.?s/bz.y@yr/a4.?o!y@i/bx.qd!yr/a3.?sy@yry@y@yry@y@@!y@yry@y@i!y@yry@y@t@y@yfq@yry@y@t@y@t@i</a2.?o!y@i!y@y@t@y@%y@!y@i!y@y@t@y@i!y@yry@y@qdq@i!y@y@t@y@t@i</a1.?sy@yr/bd.dqdy@y@/bj.qdqtdqda/be.qdqy@+/a1.?o!y@%yy@vzf!y@yz@yy@yry@y@i!y@yry@y@i!y@ydq0y@t@y@yry@yry@+/az.?s@qdq@ydy0y@yy@yzv@y@i!y@yfq@y@%yy@y@t@y@%yy@yry@y@i!y@i!yr/ax.?]sdy@yuu@y@yuy@qd!i!y@yry@y@qdq@yz@yy@yry@yz@yy@yry@y@i!y@i!yr/av.?0y@u!yvu@yuu@y@yvufy@qdqdqdqtdqdaq@y@ydqdqdq@y@y/bf.dqt@i</at.?dyvyuyvu!uvy@uvyuuvu@ufqy@t@y@ydq0y@@yv@y@t@y@@yv@y@t@y@yry@y@t@i</ar.?ou@uvu@y@y@yuu!u!yvuvu!y@yyry@y@ydy@y@@!y@yry@y@@qy@y@t@y@yry@yry@+/ar.?svyuu@y!yuu!yvuuy@yuy@u@y@qi!y@y@t@y@yry@y@i!y@y@i!y@yry@y@i!y@yry@+/aq.?ty!y!yvu@y@u@yvuvu!y@yvyvu!/bs.qd!yr/aq.?s!y@u@u@yvyvyuy@yuy@u!yvy@yfqy@y@i!y@y@t@y@y@t@y@yry@y@i!y@y@t@y@i!yr/ap.?trvuvy@u@u@y@u@y@y@u@yvu!y@qi!y@y@t@y@yry@y@yry@y@i!yzv@tdy@yry@y@t@i</ao.?syr@yuuvuuy!uvuuy@yuy@y@y!yt@t@y@yry@y@i!y@y@i!y@y@t@@yvfqdy@yry@yry@i</an.?t@yr0u@uvuvu@y!y@yuuvu@y@ud!y@/bk.dq0y@yvdqd/bd.dqy@+/an.?sy@y@dq0y@y!y@u@yvy@y@yfqd!y@yry@y@t@y@yry@y@yry@y@yr%y@!qdq@y@i!y@i!y@+/am.?t@y@y@y@dqdyvuvy@y!yfqdqy@y@y@yry@@yy@y@i!y@y@i!y@y@i!%yy@q0y@y@t@y@i!yr/am.?s/be.y@i/bd.qdq/be.y@i!%y@yy@y@t@y@y@t@y@y@t@y@y@t@y@y@t@y@t@yr/al.?o!/bo.y@dy@y@y/bp.dqt@i</al.?t/bo.@yryz@yv@y@i!y@y@yry@y@i!y@y@yry@y@i!y@yry@i</ak.?s/bo.y@i!yz@!y@y@t@y@y@i!y@y@i!y@y@i!y@y@i!y@yry@+/ak.?o!/bo.y@t@yry@y@yry@y@y@t@y@y@t@y@y@t@y@y@t@y@i!y@+/ak.?t/bo.@yry@i!y@y@i!y@y@yry@y@yry@y@y@t@y@y@t@y@i!yr/ak.?s/bo.y@i/bs.qdqt@yr/ak.?s/bn.y@yr/bu.y@i</aj.?o!/bn.y@i!/bu.y@i</aj.?o!/bm.y@yr/bv.y@+/ak.?t/bm.@y@i!/bv.y@+/ak.?t/bm.@yr/bv.y@yr/ak.?s/bm.y@i/bw.qd</ak.?s/bl.y@yr/a).u[/al.?s/bl.y@+/a,.?s/bk.y@i</a<.?s/bj.y@yr/a?.?s/bj.y@+/a.a?st/bh.@y@d</aba?d!/bg.y@d</ada?oq/bf.y@duuu/a#.?gqd/a1.?sdqy@y@y@iqduuuuu/a@.?qdqd?gqd/av.?uuuqdqdqdq/ag.u</a!.?gqdq,qdqd/au.?w/ap.u/a#.?gqd[gqdq,/au.?w/an.u[/a$.?wu<?gqd[/aw.?/aj.u[/a(.?qd-wu</ana?5dqd-/aqa?qdqd/ara?qdq</ara?uu/a+b?o"
+ bit6to8(t, 24576)
+end--main()
+
+-- init global variables ------
+
+function initglobal()
+ chr6x,asc6x={},{}
+ local b6=".abcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()`~-_=+[]{};':,<>?"
+ local i,c
+  for i=0,63 do
+   c=sub(b6,i+1,i+1)
+   chr6x[i]=c asc6x[c]=i
+  end  
+ compressdepth=2
+end--initglobal()
+
+-- functions ------------------
+
+-- convert integer a to char-6
+function chr6(a)
+ local r=chr6x[a]
+ if (r=="" or r==nil) r="."
+ return r
+end--chr6(.)
+
+-- test bit #b in a
+function btst(a,b)
+local r=false
+ if (band(a,2^b)>0) r=true
+ return r
+end--btst(..)
+
+-- return asc-6 of string a
+-- from character position b
+function fnca(a,b)
+local r=asc6x[sub(a,b,b)]
+ if (r=="" or r==nil) r=0
+ return r
+end--fnca(..)
+
+-- return string a repeats of b
+function strng(a,b)
+local i,r=0,""
+ for i=1,a do
+  r=r..b
+ end
+ return r
+end--strng(..)
+
+-- convert compressed 6-bit
+-- string to 8-bit binary
+-- memory
+function bit6to8(t,m)
+local i,d,e,f,n,p=0,0,0,0,0,1
+ repeat
+  if sub(t,p,p)=="/" then
+   d=fnca(t,p+1)
+   e=fnca(t,p+2)+64*fnca(t,p+3)
+   t=sub(t,1,p-1)..strng(e,sub(t,p+4,p+4+d-1))..sub(t,p+d+4)
+   p+=d*e-1
+  end
+  p+=1
+  until p>=#t
+   p=1 d=0 e=0
+   for i=1,#t do
+    c=fnca(t,i)
+    for n=0,5 do
+     if (btst(c,n)) e+=2^d
+     d+=1
+     if (d==8) poke(m+f,e) d=0 e=0 f+=1
+  end
+ end
+end--bit6to8(..)
+
+-- convert 8-bit binary memory
+-- area to compressed 6-bit
+-- clipboard ready sourcecode
+function bit8to6clip(i,m)
+ bit8to6(i,m,0)
+end--bit8to6clip(...)
+
+-- convert 8-bit binary memory
+-- area to compressed 6-bit
+-- string or save to clipboard
+function bit8to6(i,m,f)
+local j,k,l,p,n,c,t=0,0,0,0,0,0,""
+ m+=i-1
+ for j=i,m do
+  p=peek(j)
+  for k=0,7 do
+   if (btst(p,k)) c+=2^l
+    l+=1 if (l==6 or (j==m and k==7)) t=t..chr6(c) c=0 l=0
+   end
+  end
+ for i=1,compressdepth do
+  j=1
+  repeat
+   c=sub(t,j,j+i-1) d=sub(t,j,j)
+   n=0 p=j
+    if d=="/" then
+     j+=i+3
+    else
+     repeat
+      ok=1
+      if (c==sub(t,p,p+i-1)) n+=1 p+=i ok=0
+       until ok==1 or n==4095
+      end
+      if n>0 and n!=nil then
+       a="/"..chr6(i)..chr6(n%64)..chr6(flr(n/64))..c
+      if #a<i*n then
+       t=sub(t,1,j-1)..a..sub(t,j+i*n)
+       j+=#a-1
+      end
+     end
+     j+=1
+    until j>#t-i
+ end
+ if f==0 then
+  printh("t=\""..t.."\"\n","@clip")
+ else
+  return t
+ end
+end
+
+
 __gfx__
 0000000099999994499999949999994499999994999999940011100000ddd0007770077700000000000000000000000000000000000000000000000000000000
 000000009999999499999994999999949999999499999994012221000d777d007880088707777770000000000000000000000000000000000000000000000000
