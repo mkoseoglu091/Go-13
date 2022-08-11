@@ -22,6 +22,7 @@ function _init()
  b.board2 = {"."}
  b.board3 = {".."}
  b.board_temp = {"..."}
+ b.scoremap = {}
  
  -- pointer
  pointer = {}
@@ -42,12 +43,14 @@ function _init()
  white = {}
  white.sp = 7
  white.points = 0
+ white.final = 0
  white.pass = false
  
  -- black stones
  black = {}
  black.sp = 6
  black.points = 0
+ black.final = 0
  black.pass = false
  
  -- init and store all neighbors
@@ -56,6 +59,10 @@ function _init()
  -- info message timer
  info_timer = 0
  show_info = false
+ 
+ -- scoring
+ scoring = false
+ scoring_start = false
 
  -- debug
  debug = ""
@@ -83,12 +90,17 @@ function _draw()
   end
  end
  
- -- draw pointer
- spr(pointer.sp, (pointer.x-1) * 8 + 12, (pointer.y-1) * 8 + 12)
+ -- if game going on
+ if scoring == false then
+  -- draw pointer
+  spr(pointer.sp, (pointer.x-1) * 8 + 12, (pointer.y-1) * 8 + 12)
+  
+  
+  -- draw captured stones
+  print("black: " .. black.points, 10, 1, 7)
+  print("white: " .. white.points, 85, 1, 7)
+ end
  
- -- draw score
- print("black: " .. white.points, 10, 1, 7)
- print("white: " .. black.points, 90, 1, 7)
 
  -- show info
  if show_info then
@@ -97,72 +109,117 @@ function _draw()
   print(" - or p to pass")
  end
  
+ -- scoring
+ if scoring == true then
+  -- show area
+  for i,p in  pairs(b.scoremap) do
+   if p == b.black then
+    x, y = unflatten(i)
+    spr(10, (y-1)*8+12, (x-1)*8+12)
+   elseif p == b.white then
+    x, y = unflatten(i)
+    spr(11, (y-1)*8+12, (x-1)*8+12)
+   end
+  end
+  -- show final score
+  print("black: " .. black.final, 10, 1, 7)
+  print("white: " .. white.final, 85, 1, 7)
+  spr(112, 0, 120, 16, 1)
+  print("❎play again 🅾️continue playing", 2, 122, 0)
+ end
+ 
 end
 
 function _update()
- -- info box
- if show_info then info_timer += 1 end
- if info_timer > 45 then show_info = false info_timer = 0 end
-
- -- pointer motion
- pointer.timer += 1
- if (pointer.timer > 10) then pointer.timer = -10 end
- if (pointer.timer < 0) then pointer.sp = 8 else pointer.sp = 9 end
+ -- if scoreing starts
+ if black.pass and white.pass then
+  scoring = true
+  if scoring_start == false then
+   scoring_start = true
+   score_game()
+  end
+ end
  
- -- pointer control
- if btnp(⬅️) and pointer.x > 1 then pointer.x -= 1
- elseif btnp(➡️) and pointer.x < 13 then pointer.x += 1
- elseif btnp(⬆️) and pointer.y > 1 then pointer.y -= 1
- elseif btnp(⬇️) and pointer.y < 13 then pointer.y += 1
- elseif btnp(❎) then
+ if scoring == true then
+  -- scoring actions
+  if btnp(❎) then
+   _init()
+  elseif btnp(🅾️) then
+   scoring = false
+   scoring_start = false
+   black.pass = false
+   white.pass = false
+   copy_tab(b.board, b.scoremap)
+  end
   
-  if b.board[flatten(pointer.y, pointer.x)] == b.empty then
-   -- save board state to check for ko
-   copy_tab(b.board, b.board_temp)
-   if pointer.current == b.white then
-    b.board[flatten(pointer.y, pointer.x)] = b.white
-    sc = 0
-    sc = remove_dead(b.black)
-    illegal = remove_dead(b.white)
-    if illegal == 0 then
-     -- check ko
-     if not same_tab(b.board, b.board3) then
-  		  white.points += sc
-      pass_player() 
-      sfx(0)
-      copy_tab(b.board2, b.board3)
-      copy_tab(b.board, b.board2)
-  		  white.pass = false
-  		 else
-      -- ko
-      copy_tab(b.board_temp, b.board)
+  
+ else
+  -- info box
+  if show_info then info_timer += 1 end
+  if info_timer > 45 then show_info = false info_timer = 0 end
+ 
+  -- pointer motion
+  pointer.timer += 1
+  if (pointer.timer > 10) then pointer.timer = -10 end
+  if (pointer.timer < 0) then pointer.sp = 8 else pointer.sp = 9 end
+  
+  -- pointer control
+  if btnp(⬅️) and pointer.x > 1 then pointer.x -= 1
+  elseif btnp(➡️) and pointer.x < 13 then pointer.x += 1
+  elseif btnp(⬆️) and pointer.y > 1 then pointer.y -= 1
+  elseif btnp(⬇️) and pointer.y < 13 then pointer.y += 1
+  elseif btnp(❎) then
+   
+   if b.board[flatten(pointer.y, pointer.x)] == b.empty then
+    -- save board state to check for ko
+    copy_tab(b.board, b.board_temp)
+    if pointer.current == b.white then
+     b.board[flatten(pointer.y, pointer.x)] = b.white
+     sc = 0
+     sc = remove_dead(b.black)
+     illegal = remove_dead(b.white)
+     if illegal == 0 then
+      -- check ko
+      if not same_tab(b.board, b.board3) then
+   		  white.points += sc
+       pass_player() 
+       sfx(0)
+       copy_tab(b.board2, b.board3)
+       copy_tab(b.board, b.board2)
+   		  white.pass = false
+   		  copy_tab(b.board, b.scoremap)
+   		 else
+       -- ko
+       copy_tab(b.board_temp, b.board)
+      end
      end
-    end
-   else
-    b.board[flatten(pointer.y, pointer.x)] = b.black
-    sc = 0
-    sc = remove_dead(b.white)
-    illegal = remove_dead(b.black)
-    if illegal == 0 then
-     -- check ko
-     if not same_tab(b.board, b.board3) then
-  		  black.points += sc
-      pass_player() 
-      sfx(0)
-      copy_tab(b.board2, b.board3)
-      copy_tab(b.board, b.board2)
-  		  black.pass = false
-  		 else
-      -- ko
-      copy_tab(b.board_temp, b.board)
+    else
+     b.board[flatten(pointer.y, pointer.x)] = b.black
+     sc = 0
+     sc = remove_dead(b.white)
+     illegal = remove_dead(b.black)
+     if illegal == 0 then
+      -- check ko
+      if not same_tab(b.board, b.board3) then
+   		  black.points += sc
+       pass_player() 
+       sfx(0)
+       copy_tab(b.board2, b.board3)
+       copy_tab(b.board, b.board2)
+   		  black.pass = false
+   		  copy_tab(b.board, b.scoremap)
+   		 else
+       -- ko
+       copy_tab(b.board_temp, b.board)
+      end
      end
     end
    end
+   
+  elseif btnp(🅾️) then
+   show_info = true
   end
-  
- elseif btnp(🅾️) then
-  show_info = true
- end
+ end 
 end
 -->8
 -- common functions
@@ -325,12 +382,53 @@ end
 -->8
 -- scoring
 -- if both players pass score!
+-- find all chains of empty area
+-- for each, check reach
+-- if reach is all one col
+ -- award them to col
+
+function score_game()
+ black_area = {}
+ white_area = {}
+ for i=1, #b.board do
+  if b.board[i] == b.empty then
+   chain, reach = find_reach(i)
+   -- check if reach is all same
+   if match_col(reach, b.white) then
+    u_add(white_area, i)
+   elseif match_col(reach, b.black) then
+    u_add(black_area, i)
+   end
+  end
+ end
+ for x in all(black_area) do
+  b.scoremap[x] = b.black
+ end
+ for y in all(white_area) do
+  b.scoremap[y] = b.white
+ end
+ 
+ black.final = black.points
+ white.final = white.points
+ for p in all(b.scoremap) do
+  if p == b.black then black.final += 1
+  elseif p == b.white then white.final += 1 end
+ end
+end
+
+-- function check col
+function match_col(tab, col)
+ for p in all(tab) do
+  if b.board[p] != col then return false end
+ end
+ return true
+end
 __gfx__
 0000000099999994499999949999994499999994999999940011100000ddd0007770077700000000000000000000000000000000000000000000000000000000
 000000009999999499999994999999949999999499999994012221000d777d007880088707777770000000000000000000000000000000000000000000000000
-00700700999999949999999499999994999999949999999412dd2210d76677d07800008707888870000000000000000000000000000000000000000000000000
-00077000999999949999999499999994999999949999999412d22215d76777d50000000007800870000000000000000000000000000000000000000000000000
-00077000999999949999999499999994999999949999999412222215d77777d50000000007800870000000000000000000000000000000000000000000000000
+00700700999999949999999499999994999999949999999412dd2210d76677d0780000870788887000b0b0000080800000000000000000000000000000000000
+00077000999999949999999499999994999999949999999412d22215d76777d50000000007800870000b00000008000000000000000000000000000000000000
+00077000999999949999999499999994999999949999999412222215d77777d5000000000780087000b0b0000080800000000000000000000000000000000000
 007007009999999499999994999999949999999499999994012221550d777d557800008707888870000000000000000000000000000000000000000000000000
 0000000099999994999999949999999499999944499999940011155000ddd5507880088707777770000000000000000000000000000000000000000000000000
 00000000444444444444444444444444444444444444444400055500000555007770077700000000000000000000000000000000000000000000000000000000
@@ -374,14 +472,22 @@ __gfx__
 5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
 5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
 55555555555555555555555555555555555555555555555555555555555555555555555500000000000000000000000000000000000000000000000000000000
-5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
-5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
-5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
-5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
-5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
-5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
-5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff500000000000000000000000000000000000000000000000000000000
-55555555555555555555555555555555555555555555555555555555555555555555555500000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff5
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff5
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff5
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff5
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff5
+5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff5
+55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555
 __map__
 1010101010101010101010101010101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1022141414141414141414141414231500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
