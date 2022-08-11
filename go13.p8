@@ -77,7 +77,7 @@ function _draw()
  -- draw score
  print("black: " .. white.points, 10, 0)
  print("white: " .. black.points, 90, 0)
-
+ 
 end
 
 function _update()
@@ -118,17 +118,7 @@ function _update()
  end
 end
 -->8
--- helpers
-
--- check if point is in table
-function contains(tab, point)
- for p in all(tab) do
-  if p[1] == point[1] and p[2] == point[2] then
-   return true
-  end
- end
- return false
-end
+-- common functions
 
 -- pass to next palyer
 function pass_player()
@@ -138,8 +128,6 @@ function pass_player()
   pointer.current = 1
  end
 end
--->8
--- board functions
 
 -- check if point is on board
 function on_board(x, y)
@@ -163,6 +151,17 @@ function unflatten(fc)
  return x,y
 end
 
+-- unique add
+function u_add(tab, val)
+ for x in all(tab) do
+  if x == val then return false end
+ end
+ add(tab, val)
+ return true
+end
+-->8
+-- stone removal functions
+
 -- get neighbors of point
 function get_neighbors(p)
  x, y = unflatten(p)
@@ -184,6 +183,10 @@ function get_all_neighbors()
  end
  return temp
 end
+
+-- find reach
+-- set -> u_add
+-- pop -> deli(x,#x)
 
 __gfx__
 0000000099999994499999949999994499999994999999940011100000ddd0007770077700000000000000000000000000000000000000000000000000000000
