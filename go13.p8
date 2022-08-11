@@ -44,6 +44,10 @@ function _init()
  black.sp = 6
  black.points = 0
  
+ -- init and store all neighbors
+ all_n = get_all_neighbors()
+ 
+ 
 end
 
 function _draw()
@@ -73,7 +77,7 @@ function _draw()
  -- draw score
  print("black: " .. white.points, 10, 0)
  print("white: " .. black.points, 90, 0)
- 
+
 end
 
 function _update()
@@ -159,10 +163,28 @@ function unflatten(fc)
  return x,y
 end
 
--- replace character in str
-function replace_char(str, char, pos)
- return sub(str, 1, pos-1)..char..sub(str, pos+1)
+-- get neighbors of point
+function get_neighbors(p)
+ x, y = unflatten(p)
+ possibles = {{x-1, y}, {x+1, y}, {x, y-1}, {x, y+1}}
+ defs = {}
+ for i in all(possibles) do
+  if on_board(i[1], i[2]) then
+   add(defs, i)
+  end
+ end
+ return defs
 end
+
+-- get all neighbors
+function get_all_neighbors()
+ temp = {}
+ for i=1,#b.board do
+  add(temp, get_neighbors(i))
+ end
+ return temp
+end
+
 __gfx__
 0000000099999994499999949999994499999994999999940011100000ddd0007770077700000000000000000000000000000000000000000000000000000000
 000000009999999499999994999999949999999499999994012221000d777d007880088707777770000000000000000000000000000000000000000000000000
