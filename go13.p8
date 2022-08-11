@@ -11,13 +11,6 @@ function _init()
  -- menuitem
  menuitem(1, "pass", function() pass_player() end)
 
- -- pointer
- pointer = {}
- pointer.x = 1
- pointer.y = 1
- pointer.sp = 8
- pointer.timer = -10
- pointer.current = 2 // 1=white 2=black
  
  -- board
  b = {}
@@ -26,6 +19,14 @@ function _init()
  b.black = "b"
  b.white = "w"
  b.board = {}
+ 
+ -- pointer
+ pointer = {}
+ pointer.x = 1
+ pointer.y = 1
+ pointer.sp = 8
+ pointer.timer = -10
+ pointer.current = b.black
  
  -- create board as string
  for x=1,13 do
@@ -47,6 +48,8 @@ function _init()
  -- init and store all neighbors
  all_n = get_all_neighbors()
 
+ -- debug
+ debug = ""
  
 end
 
@@ -57,7 +60,7 @@ function _draw()
  map()
  
  -- draw turn indicator
- if pointer.current == 1 then spr(white.sp, 60, 0)
+ if pointer.current == b.white then spr(white.sp, 60, 0)
  else spr(black.sp, 60, 0) end
  
  -- draw board
@@ -78,6 +81,7 @@ function _draw()
  print("black: " .. white.points, 10, 1, 7)
  print("white: " .. black.points, 90, 1, 7)
 
+ 
 end
 
 function _update()
@@ -94,14 +98,26 @@ function _update()
  elseif btnp(❎) then
   
   if b.board[flatten(pointer.y, pointer.x)] == b.empty then
-   if pointer.current == 1 then
+   if pointer.current == b.white then
     b.board[flatten(pointer.y, pointer.x)] = b.white
-    pass_player() 
-    sfx(0)
+    sc = 0
+    sc = remove_dead(b.black)
+    illegal = remove_dead(b.white)
+    if illegal == 0 then 
+     white.points += sc
+     pass_player() 
+     sfx(0)
+    end
    else
     b.board[flatten(pointer.y, pointer.x)] = b.black
-    pass_player()
-    sfx(1)
+    sc = 0
+    sc = remove_dead(b.white)
+    illegal = remove_dead(b.black)
+    if illegal == 0 then
+     black.points += sc
+     pass_player()
+     sfx(1)
+    end
    end
   end
   
@@ -122,10 +138,10 @@ end
 
 -- pass to next palyer
 function pass_player()
- if pointer.current == 1 then
-  pointer.current = 2
+ if pointer.current == b.white then
+  pointer.current = b.black
  else
-  pointer.current = 1
+  pointer.current = b.white
  end
 end
 
@@ -167,6 +183,12 @@ function contains(tab, val)
  end
  return false
 end
+
+-- reverse col
+function reverse_col(col)
+ if col==b.black then return b.white
+ else return b.black end
+end
 -->8
 -- stone removal functions
 
@@ -193,8 +215,8 @@ function get_all_neighbors()
 end
 
 -- find reach
--- set -> u_add
--- pop -> deli(x,#x)
+-- returns chain of stones
+-- returns reach all reach points
 function find_reach(fc)
  col = b.board[fc]
  chain = {}
@@ -216,6 +238,39 @@ function find_reach(fc)
  end
  return chain, reach
 end
+
+-- check if a stone group is dead
+-- return true if stone needs to be removed
+function check_dead(fc)
+ if b.board[fc] == b.empty then return false end
+ col = reverse_col(b.board[fc])
+ chain, reach = find_reach(fc)
+ for p in all(reach) do
+  if b.board[p] == b.empty then -- opponent
+   return false
+  end
+ end
+	return true
+end
+
+-- remove dead stones
+function remove_dead(col)
+ to_remove = {}
+ for p=1,#b.board do
+  if b.board[p] == col then
+   if check_dead(p) then
+    u_add(to_remove, p)
+   end
+  end
+ end
+ score = #to_remove
+ for i in all(to_remove) do
+  b.board[i] = b.empty
+ end
+ return score
+end
+
+
 __gfx__
 0000000099999994499999949999994499999994999999940011100000ddd0007770077700000000000000000000000000000000000000000000000000000000
 000000009999999499999994999999949999999499999994012221000d777d007880088707777770000000000000000000000000000000000000000000000000
